@@ -14,8 +14,8 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
   app.useGlobalPipes(new ValidationPipe());
 
-  const port = process.env.PORT || 4000;
-  await app.listen(port);
-  console.log(`🚀 NestJS Backend escuchando en http://localhost:${port}/api`);
+  const port = process.env.PORT || 8080;
+  await app.listen(port, '0.0.0.0');
+  console.log(`🚀 NestJS Backend escuchando en el puerto ${port}`);
 }
 bootstrap();
