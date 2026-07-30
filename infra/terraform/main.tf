@@ -150,7 +150,15 @@ resource "google_compute_instance" "db_instance" {
   EOT
 }
 
-# 7. Serverless VPC Access Connector (For Cloud Run to reach the VM)
+# 7. Artifact Registry Repository
+resource "google_artifact_registry_repository" "repo" {
+  location      = var.region
+  repository_id = "credenly-repo"
+  description   = "Docker repository para el backend"
+  format        = "DOCKER"
+}
+
+# 8. Serverless VPC Access Connector (For Cloud Run to reach the VM)
 resource "google_vpc_access_connector" "connector" {
   name          = "credenly-vpc-conn"
   region        = var.region
@@ -170,7 +178,9 @@ resource "google_cloud_run_v2_service" "backend" {
 
   template {
     containers {
-      image = "us-docker.pkg.dev/$${var.project_id}/credenly-repo/backend:latest"
+      # Usamos una imagen genérica inicial para evitar el problema del huevo y la gallina.
+      # GitHub Actions actualizará la imagen con la real después de compilarla.
+      image = "us-docker.pkg.dev/cloudrun/container/hello"
       
       env {
         name  = "DB_HOST"
@@ -207,7 +217,7 @@ resource "google_cloud_run_v2_service" "backend" {
   }
 }
 
-# 9. Allow Public Access to Cloud Run (since it's a backend API)
+# 10. Allow Public Access to Cloud Run (since it's a backend API)
 resource "google_cloud_run_service_iam_member" "public_access" {
   location = google_cloud_run_v2_service.backend.location
   project  = google_cloud_run_v2_service.backend.project
