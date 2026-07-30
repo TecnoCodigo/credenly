@@ -27,6 +27,7 @@ import { HealthController } from './health.controller';
         database: config.get<string>('DB_NAME', 'sistema_autenticacion'),
         entities: [User, Session],
         synchronize: false,
+        retryAttempts: 30, // Espera hasta 90 segundos a que la BD inicie
       }),
     }),
     TypeOrmModule.forFeature([User, Session]),
