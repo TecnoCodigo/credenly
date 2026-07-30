@@ -7,7 +7,7 @@ terraform {
   }
 
   backend "gcs" {
-    bucket  = "sistema-autenticacion-p4-tf-state"
+    bucket  = "credenly-tf-state"
     prefix  = "terraform/state"
   }
 }
@@ -42,13 +42,13 @@ variable "allowed_ssh_ip" {
 
 # 1. VPC Network
 resource "google_compute_network" "vpc_network" {
-  name                    = "p4-vpc-network"
+  name                    = "credenly-vpc-network"
   auto_create_subnetworks = false
 }
 
 # 2. Subnet for the VM (Database)
 resource "google_compute_subnetwork" "db_subnet" {
-  name          = "p4-db-subnet"
+  name          = "credenly-db-subnet"
   ip_cidr_range = "10.0.1.0/24"
   region        = var.region
   network       = google_compute_network.vpc_network.id
@@ -56,7 +56,7 @@ resource "google_compute_subnetwork" "db_subnet" {
 
 # 3. Subnet for Cloud Run (Serverless VPC Access connector or Direct VPC Egress)
 resource "google_compute_subnetwork" "serverless_subnet" {
-  name          = "p4-serverless-subnet"
+  name          = "credenly-serverless-subnet"
   ip_cidr_range = "10.0.2.0/28"
   region        = var.region
   network       = google_compute_network.vpc_network.id
@@ -64,7 +64,7 @@ resource "google_compute_subnetwork" "serverless_subnet" {
 
 # 4. Firewall Rule: Allow SSH via IAP
 resource "google_compute_firewall" "allow_ssh_iap" {
-  name    = "p4-allow-ssh-iap"
+  name    = "credenly-allow-ssh-iap"
   network = google_compute_network.vpc_network.id
 
   allow {
@@ -73,12 +73,12 @@ resource "google_compute_firewall" "allow_ssh_iap" {
   }
   
   source_ranges = [var.allowed_ssh_ip]
-  target_tags   = ["p4-db-instance"]
+  target_tags   = ["credenly-db-instance"]
 }
 
 # 5. Firewall Rule: Allow MySQL only from Cloud Run Serverless Subnet
 resource "google_compute_firewall" "allow_mysql_internal" {
-  name    = "p4-allow-mysql-internal"
+  name    = "credenly-allow-mysql-internal"
   network = google_compute_network.vpc_network.id
 
   allow {
@@ -87,15 +87,15 @@ resource "google_compute_firewall" "allow_mysql_internal" {
   }
   
   source_ranges = ["10.0.2.0/28"] # Only allow Cloud Run
-  target_tags   = ["p4-db-instance"]
+  target_tags   = ["credenly-db-instance"]
 }
 
 # 6. Database VM (e2-micro Free Tier)
 resource "google_compute_instance" "db_instance" {
-  name         = "p4-mysql-db"
+  name         = "credenly-mysql-db"
   machine_type = "e2-micro"
   zone         = var.zone
-  tags         = ["p4-db-instance"]
+  tags         = ["credenly-db-instance"]
 
   boot_disk {
     initialize_params {
@@ -124,19 +124,19 @@ resource "google_compute_instance" "db_instance" {
     sudo systemctl start docker
 
     # Clone project or write docker-compose directly to spin up MySQL
-    mkdir -p /opt/p4-db
-    cat <<EOF > /opt/p4-db/docker-compose.yml
+    mkdir -p /opt/credenly-db
+    cat <<EOF > /opt/credenly-db/docker-compose.yml
     version: '3.8'
     services:
       mysql_db:
         image: mysql:8.0
-        container_name: p4_mysql_db
+        container_name: credenly_mysql_db
         restart: always
         environment:
           MYSQL_ROOT_PASSWORD: rootpassword
           MYSQL_DATABASE: sistema_autenticacion
-          MYSQL_USER: p4_user
-          MYSQL_PASSWORD: p4_password
+          MYSQL_USER: credenly_user
+          MYSQL_PASSWORD: credenly_password
         ports:
           - "3306:3306"
         volumes:
@@ -145,14 +145,14 @@ resource "google_compute_instance" "db_instance" {
       mysql_data:
     EOF
     
-    cd /opt/p4-db
+    cd /opt/credenly-db
     sudo docker-compose up -d
   EOT
 }
 
 # 7. Serverless VPC Access Connector (For Cloud Run to reach the VM)
 resource "google_vpc_access_connector" "connector" {
-  name          = "p4-vpc-conn"
+  name          = "credenly-vpc-conn"
   region        = var.region
   subnet {
     name = google_compute_subnetwork.serverless_subnet.name
@@ -164,13 +164,13 @@ resource "google_vpc_access_connector" "connector" {
 
 # 8. Cloud Run Service (Backend)
 resource "google_cloud_run_v2_service" "backend" {
-  name     = "p4-backend-nestjs"
+  name     = "credenly-backend-nestjs"
   location = var.region
   ingress  = "INGRESS_TRAFFIC_ALL"
 
   template {
     containers {
-      image = "us-docker.pkg.dev/$${var.project_id}/p4-repo/backend:latest"
+      image = "us-docker.pkg.dev/$${var.project_id}/credenly-repo/backend:latest"
       
       env {
         name  = "DB_HOST"
@@ -182,11 +182,11 @@ resource "google_cloud_run_v2_service" "backend" {
       }
       env {
         name  = "DB_USER"
-        value = "p4_user"
+        value = "credenly_user"
       }
       env {
         name  = "DB_PASSWORD"
-        value = "p4_password"
+        value = "credenly_password"
       }
       env {
         name  = "DB_NAME"
