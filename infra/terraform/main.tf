@@ -92,7 +92,7 @@ resource "google_compute_firewall" "allow_mysql_internal" {
 
 # 6. Database VM (e2-micro Free Tier)
 resource "google_compute_instance" "db_instance" {
-  name         = "credenly-mysql-db-v2"
+  name         = "credenly-mysql-db-v3"
   machine_type = "e2-micro"
   zone         = var.zone
   tags         = ["credenly-db-instance"]
@@ -143,7 +143,7 @@ resource "google_compute_instance" "db_instance" {
           - mysql_data:/var/lib/mysql
     volumes:
       mysql_data:
-    EOF
+EOF
     
     cd /opt/credenly-db
     sudo docker-compose up -d
