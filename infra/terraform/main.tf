@@ -202,6 +202,16 @@ resource "google_cloud_run_v2_service" "backend" {
         name  = "DB_NAME"
         value = "sistema_autenticacion"
       }
+
+      liveness_probe {
+        http_get {
+          path = "/health"
+        }
+        initial_delay_seconds = 10
+        timeout_seconds       = 2
+        period_seconds        = 5
+        failure_threshold     = 3
+      }
     }
     
     vpc_access {

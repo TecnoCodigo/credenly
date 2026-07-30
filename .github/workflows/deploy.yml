@@ -30,17 +30,17 @@ jobs:
         working-directory: infra/terraform
 
       - name: Configure Docker for GCP
-        run: gcloud auth configure-docker us-docker.pkg.dev
+        run: gcloud auth configure-docker us-central1-docker.pkg.dev
 
       - name: Build and Push Backend Image
         run: |
-          docker build -t us-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/us-central1/credenly-repo/backend:latest ./backend
-          docker push us-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/us-central1/credenly-repo/backend:latest
+          docker build -t us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/credenly-repo/backend:latest ./backend
+          docker push us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/credenly-repo/backend:latest
 
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy credenly-backend-nestjs \
-            --image us-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/us-central1/credenly-repo/backend:latest \
+            --image us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/credenly-repo/backend:latest \
             --region us-central1 \
             --quiet
 

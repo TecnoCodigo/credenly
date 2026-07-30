@@ -10,6 +10,7 @@ import { UsersService } from './users/users.service';
 import { AuthService } from './auth/auth.service';
 import { AuthController } from './auth/auth.controller';
 import { JwtStrategy } from './auth/jwt.strategy';
+import { HealthController } from './health.controller';
 
 @Module({
   imports: [
@@ -32,7 +33,7 @@ import { JwtStrategy } from './auth/jwt.strategy';
     PassportModule,
     JwtModule.register({}),
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, HealthController],
   providers: [UsersService, AuthService, JwtStrategy],
 })
 export class AppModule { }
