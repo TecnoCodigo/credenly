@@ -34,13 +34,13 @@ jobs:
 
       - name: Build and Push Backend Image
         run: |
-          docker build -t us-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/us-central1/p4-repo/backend:latest ./backend
-          docker push us-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/us-central1/p4-repo/backend:latest
+          docker build -t us-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/us-central1/credenly-repo/backend:latest ./backend
+          docker push us-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/us-central1/credenly-repo/backend:latest
 
       - name: Deploy to Cloud Run
         run: |
-          gcloud run deploy p4-backend-nestjs \
-            --image us-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/us-central1/p4-repo/backend:latest \
+          gcloud run deploy credenly-backend-nestjs \
+            --image us-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/us-central1/credenly-repo/backend:latest \
             --region us-central1 \
             --quiet
 
@@ -74,5 +74,5 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: sistema-autenticacion-p4
+          projectName: sistema-autenticacion-credenly
           directory: frontend/dist
