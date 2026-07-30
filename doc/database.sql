@@ -11,6 +11,7 @@ USE `sistema_autenticacion`;
 -- Estructura de la tabla `usuarios`
 -- ------------------------------------------------------
 DROP TABLE IF EXISTS `sesiones`;
+
 DROP TABLE IF EXISTS `usuarios`;
 
 CREATE TABLE `usuarios` (
@@ -30,14 +31,14 @@ CREATE TABLE `usuarios` (
 -- Estructura de la tabla `sesiones` (Historial Real de Accesos)
 -- ------------------------------------------------------
 CREATE TABLE `sesiones` (
-  `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `usuario_id` INT NOT NULL,
-  `dispositivo` VARCHAR(255) NOT NULL,
-  `ip_acceso` VARCHAR(45) NOT NULL,
-  `estado` VARCHAR(50) NOT NULL DEFAULT 'Sesión Actual',
-  `creado_en` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (`usuario_id`) REFERENCES `usuarios`(`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `usuario_id` INT NOT NULL,
+    `dispositivo` VARCHAR(255) NOT NULL,
+    `ip_acceso` VARCHAR(45) NOT NULL,
+    `estado` VARCHAR(50) NOT NULL DEFAULT 'Sesión Actual',
+    `creado_en` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------
 -- Datos de Prueba Iniciales
@@ -45,6 +46,31 @@ CREATE TABLE `sesiones` (
 -- El hash almacenado corresponde a bcrypt de 'Password123!'
 -- ------------------------------------------------------
 
-INSERT INTO `usuarios` (`usuario`, `clave`, `nombre`, `correo`, `telefono`, `rol`, `creado_en`) VALUES
-('admin', '$2b$10$3Spkg63edAoyiHesqn3KdOAyHK5HzOyhIN798cLA4ugSCAW1bINl2', 'Nelson Ruiz (Admin)', 'admin@universidad.edu.ve', '+58 414-1234567', 'Administrador', '2026-01-15 10:30:00'),
-('estudiante', '$2b$10$3Spkg63edAoyiHesqn3KdOAyHK5HzOyhIN798cLA4ugSCAW1bINl2', 'Carlos Pérez', 'carlos.perez@estudiante.edu.ve', '+58 412-9876543', 'Estudiante', '2026-03-20 14:15:00');
+INSERT INTO
+    `usuarios` (
+        `usuario`,
+        `clave`,
+        `nombre`,
+        `correo`,
+        `telefono`,
+        `rol`,
+        `creado_en`
+    )
+VALUES (
+        'admin',
+        '$2b$10$3Spkg63edAoyiHesqn3KdOAyHK5HzOyhIN798cLA4ugSCAW1bINl2',
+        'Ronald Vizcaya',
+        'contacto@ronaldvizcaya.com',
+        '+58 414-1956381',
+        'Administrador',
+        '2026-07-29 10:30:00'
+    ),
+    (
+        'estudiante',
+        '$2b$10$3Spkg63edAoyiHesqn3KdOAyHK5HzOyhIN798cLA4ugSCAW1bINl2',
+        'Carlos Perez',
+        'carlos.perez@estudiante.edu.ve',
+        '+58 412-1234567',
+        'Estudiante',
+        '2026-07-30 14:15:00'
+    );
