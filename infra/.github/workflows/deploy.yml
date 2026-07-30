@@ -1,0 +1,71 @@
+name: Cloudflare Pages & Workers Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy-infra-and-backend:
+    runs-on: ubuntu-latest
+    name: Build & Deploy Infra + Backend
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: infra/terraform
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve -var="project_id=${{ secrets.GCP_PROJECT_ID }}"
+        working-directory: infra/terraform
+
+      - name: Configure Docker for GCP
+        run: gcloud auth configure-docker us-docker.pkg.dev
+
+      - name: Build and Push Backend Image
+        run: |
+          docker build -t us-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/p4-repo/backend:latest ./backend
+          docker push us-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/p4-repo/backend:latest
+
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    name: Build & Deploy Frontend
+    needs: deploy-infra-and-backend
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Frontend Dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Build Frontend
+        run: |
+          cd frontend
+          npm run build
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+
+      - name: Deploy Frontend to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: sistema-autenticacion-p4
+          directory: frontend/dist
