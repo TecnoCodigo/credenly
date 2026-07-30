@@ -92,7 +92,7 @@ resource "google_compute_firewall" "allow_mysql_internal" {
 
 # 6. Database VM (e2-micro Free Tier)
 resource "google_compute_instance" "db_instance" {
-  name         = "credenly-mysql-db-v3"
+  name         = "credenly-mysql-db-v4"
   machine_type = "e2-micro"
   zone         = var.zone
   tags         = ["credenly-db-instance"]
@@ -126,23 +126,23 @@ resource "google_compute_instance" "db_instance" {
     # Clone project or write docker-compose directly to spin up MySQL
     mkdir -p /opt/credenly-db
     cat <<EOF > /opt/credenly-db/docker-compose.yml
-    version: '3.8'
-    services:
-      mysql_db:
-        image: mysql:5.7
-        container_name: credenly_mysql_db
-        restart: always
-        environment:
-          MYSQL_ROOT_PASSWORD: rootpassword
-          MYSQL_DATABASE: sistema_autenticacion
-          MYSQL_USER: credenly_user
-          MYSQL_PASSWORD: credenly_password
-        ports:
-          - "3306:3306"
-        volumes:
-          - mysql_data:/var/lib/mysql
+version: '3.8'
+services:
+  mysql_db:
+    image: mysql:5.7
+    container_name: credenly_mysql_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: sistema_autenticacion
+      MYSQL_USER: credenly_user
+      MYSQL_PASSWORD: credenly_password
+    ports:
+      - "3306:3306"
     volumes:
-      mysql_data:
+      - mysql_data:/var/lib/mysql
+volumes:
+  mysql_data:
 EOF
     
     cd /opt/credenly-db
