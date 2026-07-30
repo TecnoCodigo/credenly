@@ -1,4 +1,4 @@
-name: Cloudflare Pages & Workers Deploy
+name: CI/CD Pipeline
 
 on:
   push:
@@ -6,9 +6,37 @@ on:
       - main
 
 jobs:
+  # 1. Detectar cambios en las diferentes carpetas
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+      backend: ${{ steps.filter.outputs.backend }}
+      infra: ${{ steps.filter.outputs.infra }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Detect Changes
+        uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            frontend:
+              - 'frontend/**'
+            backend:
+              - 'backend/**'
+            infra:
+              - 'infra/**'
+              - '.github/workflows/**'
+              - 'docker-compose.yml'
+
+  # 2. Despliegue de Infraestructura y Backend (Solo si cambió backend o infra)
   deploy-infra-and-backend:
     runs-on: ubuntu-latest
     name: Build & Deploy Infra + Backend
+    needs: changes
+    if: ${{ needs.changes.outputs.backend == 'true' || needs.changes.outputs.infra == 'true' }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -44,10 +72,16 @@ jobs:
             --region us-central1 \
             --quiet
 
+  # 3. Despliegue del Frontend (Solo si cambió frontend o infra)
   deploy-frontend:
     runs-on: ubuntu-latest
     name: Build & Deploy Frontend
-    needs: deploy-infra-and-backend
+    needs: [changes, deploy-infra-and-backend]
+    # Ejecutar si hubo cambios relevantes, PERO asegurar que el backend no haya fallado
+    if: |
+      always() && 
+      (needs.changes.outputs.frontend == 'true' || needs.changes.outputs.infra == 'true') && 
+      (needs.deploy-infra-and-backend.result == 'success' || needs.deploy-infra-and-backend.result == 'skipped')
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
