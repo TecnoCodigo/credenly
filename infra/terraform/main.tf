@@ -92,7 +92,7 @@ resource "google_compute_firewall" "allow_mysql_internal" {
 
 # 6. Database VM (e2-micro Free Tier)
 resource "google_compute_instance" "db_instance" {
-  name         = "credenly-mysql-db"
+  name         = "credenly-mysql-db-v2"
   machine_type = "e2-micro"
   zone         = var.zone
   tags         = ["credenly-db-instance"]
@@ -129,7 +129,7 @@ resource "google_compute_instance" "db_instance" {
     version: '3.8'
     services:
       mysql_db:
-        image: mysql:8.0
+        image: mysql:5.7
         container_name: credenly_mysql_db
         restart: always
         environment:
