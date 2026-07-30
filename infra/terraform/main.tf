@@ -192,10 +192,6 @@ resource "google_cloud_run_v2_service" "backend" {
         name  = "DB_NAME"
         value = "sistema_autenticacion"
       }
-      env {
-        name  = "PORT"
-        value = "4000"
-      }
     }
     
     vpc_access {
